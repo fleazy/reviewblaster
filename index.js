@@ -22,7 +22,8 @@ async function scrapeIt() {
     let reviewRegex = new RegExp("\\\d{2,4}");
     let reviewNumber = msg.match(reviewRegex)[0];
     
-    let reviewStartNumber = 5;
+    let reviewStartNumber = 0;
+    
     //const reviewCount = await page.$('.reviews-summary__num-reviews-right-rail').textContent
     page.waitForTimeout(5000)
     await page.hover('#reviews');
@@ -37,11 +38,11 @@ async function scrapeIt() {
             else if (consoleObj.text().indexOf('Review Page') > -1) {
                 console.log(chalk.black.bgWhite(consoleObj.text()));
             }
-            else if (consoleObj.text().indexOf('w0rker') > -1) {
-                console.log(chalk.white(consoleObj.text()));
+            else if (consoleObj.text().indexOf('checking') > -1) {
+                console.log(chalk.cyan(consoleObj.text()));
             }
             else{
-            console.log(chalk.cyan(consoleObj.text()));
+            console.log(chalk.yellow(consoleObj.text()));
         }
         }
         
@@ -100,26 +101,24 @@ async function scrapeIt() {
                 }, 1000);
             }
         }, 1000);
-    }); // 1. pass variable as an argument
+    });
 
     page.waitForSelector('#reviews')
     await page.click('#reviews')
     page.waitForSelector('.reviews-summary__num-reviews-right-rail')
 
     const hrefElement = await page.$$('.pagination__next');
-    //page.waitForSelector('.reviews-summary__reviews_count_small')
-    //const reviewCount = await page.$('.reviews-summary__reviews_count_small');
-    //await page.waitForTimeout(3000)
-    //let value = await reviewCount.evaluate(el => el.textContent)
     await page.waitForTimeout(3000)
-    //console.log(value)
-    await hrefElement[0].click();
+    let value
     if (reviewNumber > 5) {
 
-        while (reviewStartNumber <= reviewNumber) {
-            await page.waitForTimeout(1000)
-            reviewStartNumber += 5;
-            if (reviewStartNumber >= reviewNumber){
+        while (value !== reviewNumber) {
+            await page.waitForSelector('.pagination__next:not([disabled])');
+            await page.waitForTimeout(800)
+            let currentReviewNumber = await page.$('div.pagination > span > strong')
+            let tempValue = await currentReviewNumber.evaluate(el => el.textContent)
+            value = tempValue.split("–")[1];
+            if (value == reviewNumber){
                 break;
             } else{
                 hrefElement[0].click();
