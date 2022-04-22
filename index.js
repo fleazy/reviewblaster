@@ -9,7 +9,6 @@ async function scrapeIt() {
     });
     const page = await browser.newPage();
 
-
     await page.goto(process.argv[2]);
     page.waitForTimeout(5000)
     page.waitForSelector('.reviews-summary__num-reviews-right-rail')
@@ -21,10 +20,7 @@ async function scrapeIt() {
 
     let reviewRegex = new RegExp("\\\d{2,4}");
     let reviewNumber = msg.match(reviewRegex)[0];
-    
-    let reviewStartNumber = 0;
-    
-    //const reviewCount = await page.$('.reviews-summary__num-reviews-right-rail').textContent
+
     page.waitForTimeout(5000)
     await page.hover('#reviews');
     await page.hover('#amenities');
@@ -34,29 +30,20 @@ async function scrapeIt() {
         if (consoleObj.type() === 'log') {
             if (consoleObj.text().indexOf("Matched Text") > -1) {
                 console.log(chalk.black.bgYellow(consoleObj.text()));
-            }
-            else if (consoleObj.text().indexOf('Review Page') > -1) {
+            } else if (consoleObj.text().indexOf('Review Page') > -1) {
                 console.log(chalk.black.bgWhite(consoleObj.text()));
-            }
-            else if (consoleObj.text().indexOf('checking') > -1) {
+            } else if (consoleObj.text().indexOf('checking') > -1) {
                 console.log(chalk.cyan(consoleObj.text()));
+            } else {
+                console.log(chalk.yellow(consoleObj.text()));
             }
-            else{
-            console.log(chalk.yellow(consoleObj.text()));
         }
-        }
-        
+
     })
-
-
-
 
     const links = await page.evaluate(() => {
 
         setTimeout(() => {
-
-            // reviewCounter += document.querySelector('.reviews-summary__num-reviews-right-rail').textContent
-            // console.log(reviewCounter + " is the top review count")
 
             everything();
 
@@ -64,7 +51,7 @@ async function scrapeIt() {
 
                 let theseReviews = document.querySelectorAll('.review__content')
                 let uglyTitle = theseReviews[0].textContent.split('Stayed')[0]
-                let reviewContent = document.querySelectorAll('.review__content')[1].textContent.split('Stayed')[1].substring(9).slice(0,-4)
+                //let reviewContent = document.querySelectorAll('.review__content')[1].textContent.split('Stayed')[1].substring(9).slice(0, -4)
 
                 let regex = new RegExp(".{1}([\\\/]).");
                 let regexMatch = RegExp("\\\d{2,6}");
@@ -74,10 +61,10 @@ async function scrapeIt() {
                 theseReviews.forEach(function (el) {
                     uglyTitle = el.textContent.split('Stayed')[0]
                     cleanTitle = uglyTitle.split(regex)[0];
-                    let cleanerTitle = cleanTitle.replace(/2007|2008|2009|2010|2011|2012|2013|2014|2015|2016|2017|2018|2019|2020|2021|2022_/g,'');
+                    let cleanerTitle = cleanTitle.replace(/2007|2008|2009|2010|2011|2012|2013|2014|2015|2016|2017|2018|2019|2020|2021|2022_/g, '');
                     let reviewRange = document.querySelector('.pagination__text').textContent;
                     console.log('checking ' + reviewRange)
-                    reviewContent = el.textContent.split('Stayed')[1].substring(9).slice(0,-13)
+                    reviewContent = el.textContent.split('Stayed')[1].substring(9).slice(0, -13)
                     if (cleanerTitle.match(regexMatch)) {
                         console.log(cleanTitle + " FUCK YEAH")
                         console.log("Review Page " + reviewRange)
@@ -89,7 +76,7 @@ async function scrapeIt() {
                             console.log(`Matched Text: "${reviewContent}"`)
                             console.log("Review Page " + reviewRange + " ^^^^^^^^^^^^^^^^^^^^^^^")
                         }
-                        
+
                     }
                 })
             }
@@ -114,28 +101,24 @@ async function scrapeIt() {
 
         while (value !== reviewNumber) {
             await page.waitForSelector('.pagination__next:not([disabled])');
-            await page.waitForTimeout(800)
+            await page.waitForTimeout(1000)
             let currentReviewNumber = await page.$('div.pagination > span > strong')
             let tempValue = await currentReviewNumber.evaluate(el => el.textContent)
             value = tempValue.split("–")[1];
-            if (value == reviewNumber){
+            if (value == reviewNumber + 1) {
+                console.log('im about to break haha')
                 break;
-            } else{
+            } else {
                 hrefElement[0].click();
             }
-            
+
 
         }
+        await page.waitForTimeout(500);
         console.log("we're done");
         page.close();
         browser.close();
     }
-         
-
-
 }
 
-
-
 scrapeIt();
-
